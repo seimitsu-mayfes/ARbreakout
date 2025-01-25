@@ -1,6 +1,5 @@
 // やること
 // 未来の自分のためにプログラムを分かりやすいよう整理する
-// ブロックを個別で色を付けられるようにする
 // 引継ぎ資料と報告書を書く
 // 残機の実装：1回or2回までミスしてOKにする  (これの実装は直前でも良い)
 // スコアの計算方法や制限時間など細かいルールを決める   (これも直前で良い)
@@ -17,7 +16,7 @@ ArrayList<Integer> blockid = new ArrayList<Integer>();
 // ボールの挙動を計算するための変数
 float radius = 5;                       // ボールの半径
 float x0, y0;                           // ボールの初期位置
-float vx0 = 0, vy0 = 12;               // ボールの初期速度
+float vx0 = 0, vy0 = 12;                // ボールの初期速度
 float v = sqrt(vx0 * vx0 + vy0 * vy0);  // ボールの速さ
 float x1, y1;                           // 左手の座標
 float x2, y2;                           // 右手の座標
@@ -32,7 +31,7 @@ int cols;      // ブロックの列数
 int blockWidth;  // ブロックの幅
 int blockHeight; // ブロックの高さ
 int padding;     // ブロック間のスペース
-int startX;      // 中央揃え
+int startX;      // ブロックの配置開始位置（x座標）
 int startY = 50;      // ブロックの配置開始位置（y座標）
 int level = 1;        // ブロック配置のレベル
 int NumberofBlock;    // ブロックの数
@@ -92,22 +91,22 @@ void draw() {
         if (resttime == 0) {                        // 残り時間が0になるとゲームオーバー
             mode =1;
         }
-}
+    }
     
     //ゲームオーバー時の処理
     else if (mode == 1) {
         image(gameover,(width - gameover.width) / 2,(height - gameover.height) / 2);
-}
+    }
     
     //ゲームクリア時の処理
     else if (mode == 2) {
         image(gameclear,(width - gameclear.width) / 2,(height - gameclear.height) / 2);
-}
+    }
     
     //スタンバイ時の処理
     else if (mode == 0) {
         next_ball_position();                       // ボールの位置を計算
-}
+    }
     
     //カウントダウンの処理
     else if (mode == 4) {
@@ -119,7 +118,7 @@ void draw() {
         if (5 - time == 0) {
             gamestart();
         }
-}
+    }
 }
 
 // 人物が検出された時に実行される appearEvent 関数
@@ -136,7 +135,7 @@ void disappearEvent(SkeletonData sd) {
 void draw_bar() {
     if (user == null) {                          // userが空なら
         return;                                   // 何もしないで関数を抜ける
-}
+    }
     colorMode(RGB);                             // 色の指定を RGB 形式にする
     noStroke();                                 // 線は描かない
     fill(255, 255, 255);                        // 塗りつぶす色の指定 (Red, Green, Blue)
@@ -156,12 +155,12 @@ void draw_bar() {
         x1 =prex1 + (x1 - prex1) * v / sqrt((prex1 - x1) * (prex1 - x1) + (prey1 - y1) * (prey1 - y1));
         y1 =prey1 + (y1 - prey1) * v / sqrt((prex1 - x1) * (prex1 - x1) + (prey1 - y1) * (prey1 - y1));
         //println(x1, y1);
-}
+    }
     if((prex2 - x2) * (prex2 - x2) + (prey2 - y2) * (prey2 - y2) > v * v) {
         x2 =prex2 + (x2 - prex2) * v / sqrt((prex2 - x2) * (prex2 - x2) + (prey2 - y2) * (prey2 - y2));
         y2 =prey2 + (y2 - prey2) * v / sqrt((prex2 - x2) * (prex2 - x2) + (prey2 - y2) * (prey2 - y2));
         //println(x2, y2);
-}
+    }
     
     ellipse(x1, y1, 10, 10);
     ellipse(x2, y2, 10, 10);
@@ -178,15 +177,15 @@ void next_ball_position() {
     //壁に当たった時の処理。左右の壁に当たったらvxを、上の壁に当たったらvyを反転
     if(x <= radius || x >= 639 - radius) {
         vx =-vx;
-}
+    }
     if(y <= radius) {
         vy =-vy;
-}
+    }
     //下の壁に当たったらゲームオーバー。モード管理のフラグを1にする
     if(y >= 639 - radius) {
         vy =0;
         mode= 1;
-}
+    }
     
     //バーに当たった時の反射を計算する時に使う変数
     //a、bはバーを直線の式y = ax + bで表した時のa、b
@@ -194,18 +193,18 @@ void next_ball_position() {
     if(abs(x2 - x1) < 0.001) { // バーが垂直に近い場合
         a = Float.POSITIVE_INFINITY; // 傾きを無限大とみなす
         b = 0; // 使用しない
-} else {
+    } else {
         a = (y2 - y1) / (x2 - x1);
         b = y1 - a * x1;
-}
+    }
     
     //dはバーとボールとの距離、d_leftとd_rightはボールと左手/右手との距離
     float d;
     if(abs(x2 - x1) < 0.001) {
         d = abs(x - x1); // 垂直バーとの距離
-} else {
+    } else {
         d = abs(a * x - y + b) / sqrt(a * a + 1);
-}
+    }
     float d_left = sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1));
     float d_right = sqrt((x - x2) * (x - x2) + (y - y2) * (y - y2));
     
@@ -218,7 +217,7 @@ void next_ball_position() {
         float s = vx;
         vx =vy;
         vy =s;
-}
+    }
     //端点以外に当たった時の処理。
     //時々おかしな挙動をすることが有るので、もっと良い書き方があるかも。
     else if (mode == 3 && x >= min(x1, x2) && x <= max(x1, x2) && (d <= radius + 2 || abs(nextY - a * nextX - b) <= radius + 8) && bar_touching == 0) {
@@ -251,10 +250,10 @@ void next_ball_position() {
         float vc = sqrt(vx * vx + vy * vy);
         vx =vx * v / vc;
         vy =vy * v / vc;
-}
+    }
     else if (mode == 3 && bar_touching == 1 && (d > radius + 15 || abs(nextY - a * nextX - b) > radius + 20)) {
         bar_touching = 0;
-}
+    }
     
     //ブロックとの衝突
     //削除するブロックのIDを挿入するリスト
@@ -279,12 +278,12 @@ void next_ball_position() {
         }
             toRemove.add(i); // 削除対象を記録
         }
-}
+    }
     
     //ブロック削除処理
     for (int i = toRemove.size() - 1; i >= 0; i--) {
         blockid.remove((int)toRemove.get(i));
-}
+    }
     
     //速度が決まったので次のボールの位置も決定。
     x += vx;
@@ -311,10 +310,11 @@ void draw_block() {
             int blockx = startX + col * (blockWidth + padding);
             int blocky = startY + row * (blockHeight + padding);
             
-           // 色を設定。行ごとに色を変えている。
+           // 色を設定
            if (level == 1) {
                 fill(map(row, 0, rows - 1, 50, 255), 100, 200);
         }
+        // ③
            if (level == 2) {
                 int[] green = {0, 1, 3, 4, 8, 9, 14, 17, 19};
                 if (contains(green, blockid.get(i))) {
@@ -332,38 +332,39 @@ void draw_block() {
             strokeWeight(0.5);
             rect(blockx, blocky, blockWidth, blockHeight);
         }
-}
+    }
 }
 
 // 変数初期化用関数
 void init_variable() {
-    x0= width / 2;
+    x0= width / 2;      // ボールの初期位置
     y0= height / 2;
-    x = x0;             // ボールの初期位置
+    x = x0;             // ボールを初期位置に配置
     y = y0;
-    vx= 0;           // ボールの初期速度
+    vx= 0;              // ボールの初期速度
     vy= 0;
     
     mode = 0;           // ゲームモード
     score = 0;          // スコア
-    bar_touching = 0;   //バーとの接触判定
+    bar_touching = 0;   // バーとの接触判定
     
-    blockid.clear();    // ブロック番号の初期化
-    if(level == 1) {   // レベルごとのブロックの設定
-        rows= 3;
-        cols= 6;
-        blockWidth = 80;
-        blockHeight = 30;
-        padding = 5;
-        startX = (640 - (cols * blockWidth + (cols - 1) * padding)) / 2;
+    blockid.clear();       // ブロック番号の初期化
+    // ①
+    if(level == 1) {       // レベルごとのブロックの設定
+        rows= 3;           // ブロックの行数
+        cols= 6;           // ブロックの列数
+        blockWidth = 80;   // ブロックの横幅
+        blockHeight = 30;  // ブロックの高さ
+        padding = 5;       // ブロック間の幅
+        startX = (640 - (cols * blockWidth + (cols - 1) * padding)) / 2;  // ブロックを中央に揃える
         for (int i = 0; i < rows * cols; i++) {  // ブロックを配置したい位置の番号を追加する
             blockid.add(i);
         }
-        NumberofBlock = blockid.size();
-        timelimit = 60;
-}
+        NumberofBlock = blockid.size();  // ブロックの数を記録
+        timelimit = 1000;  // 制限時間
+    }
     
-    if(level == 2) {
+    else if(level == 2) {
         rows= 4;
         cols= 5;
         blockWidth = 80;
@@ -374,32 +375,35 @@ void init_variable() {
             blockid.add(i);
         }
         NumberofBlock = blockid.size();
-        timelimit = 60;
-}
+        timelimit = 1000;
+    }
     
-    if(level == 3) {
+    else if(level == 3) {
         rows= 6;
         cols= 7;
         blockWidth = 80;
         blockHeight = 30;
         padding = 5;
         startX = (640 - (cols * blockWidth + (cols - 1) * padding)) / 2;
+        // ②
+        int[] blocktrue = {0, 1, 3, 4, 8, 9, 14, 17, 19, 23, 26, 29, 32, 36, 39, 41};
         for (int i = 0; i < rows * cols; i++) {
-           if (i % 2 == 0) {
-                blockid.add(i);
-        }
+            if (contains(blocktrue, i)) {
+                    blockid.add(i);
+            }
         }
         NumberofBlock = blockid.size();
-        timelimit = 60;
-}
+        timelimit = 1000;
+    }
 }
 
 // キー入力を感知する関数
 void keyPressed() {
     if(key == 'r' && mode != 3) {   // プレイモードでない時、rを押すとリセット
         init_variable();
-}
-    if(mode == 0) {   // スタンバイの時、数字キーを押すと対応するレベルのブロック配置に変わる
+    }
+    else if(mode == 0) {   // スタンバイの時、数字キーを押すと対応するレベルのブロック配置に変わる
+        // ④
         if (key == '1') {
             level = 1;
             init_variable();
@@ -418,7 +422,7 @@ void keyPressed() {
             mode =4;
             basetime = millis();
         }
-}
+    }
 }
 
 // ゲームをスタートする関数
@@ -435,6 +439,6 @@ boolean contains(int[] array, int value) {
         if (val == value) {
             return true;
         }
-}
+    }
     return false;
 }

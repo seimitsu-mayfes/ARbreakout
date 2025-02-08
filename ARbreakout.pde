@@ -8,7 +8,7 @@ import kinect4WinSDK.*;                       // kinect4WinSDK ライブラリ�
 
 Kinect kine = new Kinect(this);               // Kinect オブジェクト "kine" の宣言
 SkeletonData user;                            // SkeletonData オブジェクト "user" の宣言
-// PImage backImage;                             // 背景画像用の PImage "backImage" の宣言
+// PImage backImage;                          // 背景画像用の PImage "backImage" の宣言
 
 // ブロックを番号を付けて管理するリスト
 ArrayList<Integer> blockid = new ArrayList<Integer>();
@@ -37,7 +37,7 @@ int level = 1;        // ブロック配置のレベル
 int NumberofBlock;    // ブロックの数
 
 // ゲームモードに関わる変数
-// modeが3ならプレイモード、1ならゲームオーバー、2ならゲームクリア、0ならスタンバイ、4ならカウントダウン
+// modeが3ならプレイモード、1ならゲームオーバー、2ならゲームクリア、0ならゲーム前スタンバイ、4ならカウントダウン、5ならゲーム中スタンバイ
 // bar_touchingが0ならバーと触れていない、1なら触れている
 int mode;              // ゲームモード
 int score;             // スコア
@@ -45,6 +45,8 @@ int bar_touching;      // バーとの接触判定
 int time;              // 各モードが始まってからの時間
 int basetime;          // 各モードが始まった時刻
 int timelimit;         // ゲームの制限時間
+int resttime;          // ゲームの残り時間
+int life;              // 残機
 
 // 画像の準備
 // PImage background;   // 背景画像用
@@ -62,6 +64,7 @@ void setup() {
     gameover.resize(width / 2, 0);         // サイズ調整
     gameclear = loadImage("gameclear.png");
     gameclear.resize(width / 2, 0);        // サイズ調整
+    user = null;
 }
 
 void draw() {
@@ -83,8 +86,8 @@ void draw() {
         draw_ball();                                // ボールを描画
         
         time= floor((millis() - basetime) / 1000);
-        int resttime = timelimit - time;            // 残り時間
-        textSize(30);                               // 以下3行で残り時間を表示
+        resttime = timelimit - time;                // 残り時間
+        textSize(30);                               // 以下4行で残り時間を表示
         fill(255, 255, 255);
         textAlign(LEFT, BASELINE);
         text("TIME:" + resttime, width - 120, 35);
@@ -104,8 +107,11 @@ void draw() {
     }
     
     //スタンバイ時の処理
-    else if (mode == 0) {
-        next_ball_position();                       // ボールの位置を計算
+    else if (mode == 0 || mode == 5) {
+        textSize(30);                               // 以下4行で残り時間を表示
+        fill(255, 255, 255);
+        textAlign(LEFT, BASELINE);
+        text("TIME:" + timelimit, width - 120, 35);
     }
     
     //カウントダウンの処理
@@ -115,9 +121,20 @@ void draw() {
         textAlign(CENTER, CENTER); // 中央揃え（水平: CENTER, 垂直: CENTER）
         fill(255, 255, 255);
         text(5 - time, width / 2, height / 2);
+
+        textSize(30);                               // 以下4行で残り時間を表示
+        fill(255, 255, 255);
+        textAlign(LEFT, BASELINE);
+        text("TIME:" + timelimit, width - 120, 35);
+
         if (5 - time == 0) {
             gamestart();
         }
+    }
+
+    if(life == 2 || mode == 5) {   // 残りのボールを描画
+        fill(255, 255, 255);
+        ellipse(320, 25, 2 * radius, 2 * radius);
     }
 }
 
@@ -148,6 +165,14 @@ void draw_bar() {
     y1= user.skeletonPositions[Kinect.NUI_SKELETON_POSITION_HAND_LEFT].y * height;
     x2= user.skeletonPositions[Kinect.NUI_SKELETON_POSITION_HAND_RIGHT].x * width;
     y2= user.skeletonPositions[Kinect.NUI_SKELETON_POSITION_HAND_RIGHT].y * height;
+
+    if(y1 <= 340) {
+        y1 = 340;
+    }
+
+    if(y2 <= 340) {
+        y2 = 340;
+    }
     
     //手の動く速度が一定以上の時、バーの速度に上限を設ける（速度上限＝ボールの速度）
     if((prex1 - x1) * (prex1 - x1) + (prey1 - y1) * (prey1 - y1) > v * v) {
@@ -166,9 +191,9 @@ void draw_bar() {
     ellipse(x2, y2, 10, 10);
     
     //手と手の間に線を描く
-    stroke(255, 255, 255);                      // 線を描く (Red, Green, Blue)
-    strokeWeight(10);                            // 先の太さ
-    noFill();                                   // 塗りつぶさない
+    stroke(255, 255, 255);     // 線を描く (Red, Green, Blue)
+    strokeWeight(10);          // 先の太さ
+    noFill();                  // 塗りつぶさない
     line(x1, y1, x2, y2);
 }
 
@@ -181,10 +206,17 @@ void next_ball_position() {
     if(y <= radius) {
         vy =-vy;
     }
-    //下の壁に当たったらゲームオーバー。モード管理のフラグを1にする
+    //下の壁に当たったら残機を1減らす。残機が0になったらゲームオーバー。モード管理のフラグを1にする
     if(y >= 639 - radius) {
         vy =0;
-        mode= 1;
+        life -= 1;
+        if (life == 0) {
+            mode = 1;
+        }
+        else {
+            mode = 5;
+            timelimit = resttime;
+        }
     }
     
     //バーに当たった時の反射を計算する時に使う変数
@@ -349,6 +381,9 @@ void init_variable() {
     bar_touching = 0;   // バーとの接触判定
     
     blockid.clear();       // ブロック番号の初期化
+
+    life = 2;
+
     // ①
     if(level == 1) {       // レベルごとのブロックの設定
         rows= 3;           // ブロックの行数
@@ -421,6 +456,16 @@ void keyPressed() {
         if (key == 's') {
             mode =4;
             basetime = millis();
+        }
+    }
+    else if(mode == 5) {
+        if (key == 's') {
+            mode =4;
+            basetime = millis();
+            x = x0;             // ボールを初期位置に配置
+            y = y0;
+            vx= 0;              // ボールの初期速度
+            vy= 0;
         }
     }
 }

@@ -88,7 +88,7 @@ void draw() {
     score = finalscore + NumberofBlock - blockid.size();     // スコア計算。現在は消したブロックの数
     if (mode != 1 && mode != 2) {
         textSize(30);                               // 以下3行でスコアを表示
-        fill(255, 255, 255);
+        fill(0, 0, 0);
         textAlign(LEFT, BASELINE);
         text("SCORE:" + score, 30 + 100, 35);
     }
@@ -101,7 +101,7 @@ void draw() {
         time= floor((millis() - basetime) / 1000);
         resttime = timelimit - time;                // 残り時間
         textSize(30);                               // 以下4行で残り時間を表示
-        fill(255, 255, 255);
+        fill(0, 0, 0);
         textAlign(LEFT, BASELINE);
         text("TIME:" + resttime, width - 150 - 100, 35);
         if (resttime == 0) {                        // 残り時間が0になるとゲームオーバー
@@ -113,29 +113,52 @@ void draw() {
     else if (mode == 1) {
         image(gameover,(width - gameover.width) / 2,(height - gameover.height) / 2);
         textSize(30);
-        fill(255, 255, 255);
+        fill(0, 0, 0);
         textAlign(CENTER, CENTER);
         text("SCORE:" + score, width / 2, height / 2 + 70);
+        text("PRESS R KEY TO RETRY", width / 2, height / 2 + 130);
     }
     
     //ゲームクリア時の処理
     else if (mode == 2) {
         image(gameclear,(width - gameclear.width) / 2,(height - gameclear.height) / 2);
         textSize(30);
-        fill(255, 255, 255);
+        fill(0, 0, 0);
         textAlign(CENTER, CENTER);
         totalscore = score + resttime / 2;
         text("BLOCK SCORE:" + score, width / 2, height / 2 + 70);
         text("TIME SCORE:" + resttime / 2, width / 2, height / 2 + 100);
         text("TOTAL SCORE:" + totalscore, width / 2, height / 2 + 130);
+        if (level == 1 || level == 2) {
+            text("PRESS R KEY TO NEXT STAGE", width / 2, height / 2 + 190);
+        }
+        else {
+            text("PRESS R KEY", width / 2, height / 2 + 190);
+        }
     }
     
     //スタンバイ時の処理
     else if (mode == 0 || mode == 5) {
         textSize(30);                               // 以下4行で残り時間を表示
-        fill(255, 255, 255);
+        fill(0, 0, 0);
         textAlign(LEFT, BASELINE);
-        text("TIME:" + timelimit, width - 150 - 100, 35);
+        text("WAITING", width - 150 - 100, 35);
+        textAlign(CENTER, CENTER);
+        if (mode == 0) {
+            if (level == 1) {
+                text("- 1st STAGE -", width / 2, height / 2);
+            }
+            if (level == 2) {
+                text("- 2nd STAGE -", width / 2, height / 2);
+            }
+            if (level == 3) {
+                text("- FINAL STAGE -", width / 2, height / 2);
+            }
+            text("PRESS S KEY TO START", width / 2, height / 2 + 60);
+        }
+        else {
+            text("PRESS S KEY TO RESTART", width / 2, height / 2 + 60);
+        }
     }
     
     //カウントダウンの処理
@@ -143,11 +166,11 @@ void draw() {
         time= floor((millis() - basetime) / 1000);
         textSize(60);
         textAlign(CENTER, CENTER); // 中央揃え（水平: CENTER, 垂直: CENTER）
-        fill(255, 255, 255);
+        fill(0, 0, 0);
         text(3 - time, width / 2, height / 2);
 
         textSize(30);                               // 以下4行で残り時間を表示
-        fill(255, 255, 255);
+        fill(0, 0, 0);
         textAlign(LEFT, BASELINE);
         text("TIME:" + timelimit, width - 150 - 100, 35);
 
@@ -190,12 +213,12 @@ void draw_bar() {
     x2= user.skeletonPositions[Kinect.NUI_SKELETON_POSITION_HAND_RIGHT].x * width;
     y2= user.skeletonPositions[Kinect.NUI_SKELETON_POSITION_HAND_RIGHT].y * height;
 
-    if(y1 <= 340) {
-        y1 = 340;
+    if(y1 <= 280) {
+        y1 = 280;
     }
 
-    if(y2 <= 340) {
-        y2 = 340;
+    if(y2 <= 280) {
+        y2 = 280;
     }
     
     //手の動く速度が一定以上の時、バーの速度に上限を設ける（速度上限＝ボールの速度）
@@ -436,14 +459,16 @@ void init_variable() {
         padding = 7;
         startX = (width - (cols * blockWidth + (cols - 1) * padding)) / 2;
         for (int i = 0; i < rows * cols; i++) {
-            blockid.add(i);
+            if ((i % cols != 2 && i % cols != 5 ) || i / cols == 0 || i / cols == 6) {
+                blockid.add(i);
+            }
         }
         NumberofBlock = blockid.size();
         timelimit = 60;
     }
     
     else if(level == 3) {
-        rows= 8;
+        rows= 7;
         cols= 9;
         blockWidth = 60;
         blockHeight = 20;
@@ -451,7 +476,9 @@ void init_variable() {
         startX = (width - (cols * blockWidth + (cols - 1) * padding)) / 2;
         // ②
         for (int i = 0; i < rows * cols; i++) {
-            blockid.add(i);
+            if (i / cols != 3) {
+                blockid.add(i);
+            }
         }
         NumberofBlock = blockid.size();
         timelimit = 75;
@@ -460,23 +487,29 @@ void init_variable() {
 
 // キー入力を感知する関数
 void keyPressed() {
-    if(key == 'r' && mode != 3 && mode != 2) {   // プレイモードでない時、rを押すとリセット
-        init_variable();
+    if (key == 'r' && mode != 3 && mode != 2) {   // プレイモードでない時、rを押すとリセット
         score = 0;
         totalscore = 0;
         finalscore = 0;
+        if (mode == 1) {
+            level = 1;
+        }
+        init_variable();
     }
-    else if(key == 'r' && mode == 2) {
+    else if (key == 'r' && mode == 2) {
         if (level <= 2) {
             level += 1;
+            finalscore = totalscore;
         }
         else {
             level = 1;
+            score = 0;
+            totalscore = 0;
+            finalscore = 0;
         }
-        finalscore = totalscore;
         init_variable();
     }
-    else if(mode == 0) {   // スタンバイの時、数字キーを押すと対応するレベルのブロック配置に変わる
+    else if (mode == 0) {   // スタンバイの時、数字キーを押すと対応するレベルのブロック配置に変わる
         // ④
         if (key == '1') {
             level = 1;
@@ -496,7 +529,7 @@ void keyPressed() {
             basetime = millis();
         }
     }
-    else if(mode == 5) {
+    else if (mode == 5) {
         if (key == 's') {
             mode = 4;
             basetime = millis();
@@ -513,6 +546,8 @@ void keyPressed() {
         score = 0;
         totalscore = 0;
         finalscore = 0;
+        level = 1;
+        init_variable();
     }
 }
 
